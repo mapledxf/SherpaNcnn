@@ -22,18 +22,13 @@ public class AsrService extends Service {
     private RecognitionCallback recognitionCallback;
     private final Handler mainHandler = new Handler(Looper.getMainLooper());
 
-    private final int audioSource = MediaRecorder.AudioSource.MIC;
     private final int sampleRateInHz = 16000;
-    private final int channelConfig = AudioFormat.CHANNEL_IN_MONO;
-    private final int audioFormat = AudioFormat.ENCODING_PCM_16BIT;
 
     public boolean isRecording = false;
     private String lastText = "";
-    private int idx = 0;
-    private boolean useGPU = true; // 您可以根据需要修改这个值
     private final IAsrService.Stub aidlBinder = new IAsrService.Stub() {
         @Override
-        public void initModel() throws RemoteException {
+        public void initModel() {
             AsrService.this.initModel();
         }
 
@@ -100,7 +95,18 @@ public class AsrService extends Service {
                 80
         );
 
-        ModelConfig modelConfig = SherpaNcnnKt.getModelConfig(0, useGPU);
+        ModelConfig modelConfig = new ModelConfig(
+                "model/encoder_jit_trace-pnnx.ncnn.param",
+                "model/encoder_jit_trace-pnnx.ncnn.bin",
+                "model/decoder_jit_trace-pnnx.ncnn.param",
+                "model/decoder_jit_trace-pnnx.ncnn.bin",
+                "model/joiner_jit_trace-pnnx.ncnn.param",
+                "model/joiner_jit_trace-pnnx.ncnn.bin",
+                "model/tokens.txt",
+                1,
+                true
+                );
+
         DecoderConfig decoderConfig = SherpaNcnnKt.getDecoderConfig("greedy_search", 4);
 
         RecognizerConfig config = new RecognizerConfig(
@@ -137,9 +143,12 @@ public class AsrService extends Service {
             return false;
         }
 
+        int channelConfig = AudioFormat.CHANNEL_IN_MONO;
+        int audioFormat = AudioFormat.ENCODING_PCM_16BIT;
         int numBytes = AudioRecord.getMinBufferSize(sampleRateInHz, channelConfig, audioFormat);
         Log.i(TAG, "Buffer size in milliseconds: " + (numBytes * 1000.0f / sampleRateInHz));
 
+        int audioSource = MediaRecorder.AudioSource.MIC;
         audioRecord = new AudioRecord(
                 audioSource,
                 sampleRateInHz,
@@ -160,7 +169,6 @@ public class AsrService extends Service {
         audioRecord.startRecording();
         isRecording = true;
         lastText = "";
-        idx = 0;
 
         recordingThread = new Thread(() -> {
             if (model != null) {
@@ -224,11 +232,11 @@ public class AsrService extends Service {
                     String text = model.getText();
                     String textToDisplay = lastText;
 
-                    if (text != null && !text.isEmpty()) {
+                    if (!text.isEmpty()) {
                         if (lastText.isEmpty()) {
-                            textToDisplay = idx + ": " + text;
+                            textToDisplay = text;
                         } else {
-                            textToDisplay = lastText + "\n" + idx + ": " + text;
+                            textToDisplay = lastText + "\n" + text;
                         }
                         final String currentPartialResult = textToDisplay;
                         if (recognitionCallback != null) {
@@ -238,13 +246,12 @@ public class AsrService extends Service {
 
                     if (isEndpoint) {
                         model.reset(false);
-                        if (text != null && !text.isEmpty()) {
+                        if (!text.isEmpty()) {
                             lastText = textToDisplay;
                             final String currentResult = lastText;
                             if (recognitionCallback != null) {
                                 mainHandler.post(() -> recognitionCallback.onResult(currentResult));
                             }
-                            idx++;
                         }
                     }
                 }

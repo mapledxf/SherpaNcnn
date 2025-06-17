@@ -64,7 +64,7 @@ class MainActivity : AppCompatActivity() {
         @Throws(RemoteException::class)
         override fun onPartialResult(partialResult: String) {
             runOnUiThread {
-                textView.setText("Partial: $partialResult")
+                textView.text = "Partial: $partialResult"
                 Log.d(TAG, "Partial Result: $partialResult")
             }
         }
