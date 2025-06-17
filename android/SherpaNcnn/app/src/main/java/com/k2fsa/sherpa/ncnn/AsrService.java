@@ -20,6 +20,8 @@ public class AsrService extends Service {
     private AudioRecord audioRecord;
     private Thread recordingThread;
     private RecognitionCallback recognitionCallback;
+
+    private boolean isInit = false;
     private final Handler mainHandler = new Handler(Looper.getMainLooper());
 
     private final int sampleRateInHz = 16000;
@@ -77,18 +79,17 @@ public class AsrService extends Service {
         }
     };
 
-
     @Override
     public IBinder onBind(Intent intent) {
         Log.d(TAG, "onBind called with intent: " + intent);
-        // 检查 action 是否匹配，虽然 AndroidManifest 中已经通过 intent-filter 过滤了
-        if ("com.k2fsa.sherpa.ncnn.RECOGNITION_SERVICE_ACTION".equals(intent.getAction())) {
-            return aidlBinder;
-        }
-        return null; // 或者返回一个默认的 Binder，或者抛出异常
+        return aidlBinder;
     }
 
     public void initModel() {
+        if (isInit) {
+            Log.i(TAG, "Already init, skip");
+            return;
+        }
         Log.i(TAG, "Start to initialize model");
         FeatureExtractorConfig featConfig = SherpaNcnnKt.getFeatureExtractorConfig(
                 16000.0f,
@@ -126,6 +127,7 @@ public class AsrService extends Service {
                 getApplication().getAssets()
         );
         Log.i(TAG, "Finished initializing model");
+        isInit = true;
     }
 
     public boolean startRecording(RecognitionCallback callback) {
