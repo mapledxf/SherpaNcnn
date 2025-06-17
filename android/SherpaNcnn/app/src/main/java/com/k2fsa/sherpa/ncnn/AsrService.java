@@ -67,12 +67,12 @@ public class AsrService extends Service {
         }
 
         @Override
-        public void stopRecording() throws RemoteException {
+        public void stopRecording() {
             AsrService.this.stopRecording();
         }
 
         @Override
-        public boolean isRecording() throws RemoteException {
+        public boolean isRecording() {
             return AsrService.this.isRecording;
         }
     };

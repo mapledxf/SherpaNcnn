@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
-
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
 
     <permission
@@ -31,14 +30,8 @@
                 android:name="android.app.lib_name"
                 android:value="" />
         </activity>
-        <service android:name=".AsrService"
-            android:exported="true"
-            android:permission="com.k2fsa.sherpa.ncnn.BIND_RECOGNITION_SERVICE">
-            <intent-filter>
-                <!-- 添加一个 action，客户端 APK 将使用它来绑定 Service -->
-                <action android:name="com.k2fsa.sherpa.ncnn.RECOGNITION_SERVICE_ACTION" />
-            </intent-filter>
-        </service>
+        <service android:name="com.k2fsa.sherpa.ncnn.AsrService"
+            android:exported="true" />
     </application>
 
 </manifest>

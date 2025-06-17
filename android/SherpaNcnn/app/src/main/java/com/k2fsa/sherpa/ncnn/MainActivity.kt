@@ -5,9 +5,6 @@ import android.content.ComponentName
 import android.content.Intent
 import android.content.ServiceConnection
 import android.content.pm.PackageManager
-import android.media.AudioFormat
-import android.media.AudioRecord
-import android.media.MediaRecorder
 import android.os.Bundle
 import android.os.IBinder
 import android.os.RemoteException
@@ -29,26 +26,9 @@ class MainActivity : AppCompatActivity() {
         "com.k2fsa.sherpa.ncnn.RECOGNITION_SERVICE_ACTION" // Service 的 Action
     private val SERVICE_PACKAGE_NAME: String = "com.k2fsa.sherpa.ncnn" // Service APK 的包名
 
-    // If there is a GPU and useGPU is true, we will use GPU
-    // If there is no GPU and useGPU is true, we won't use GPU
-    private val useGPU: Boolean = true
-
-    private lateinit var model: SherpaNcnn
-    private var audioRecord: AudioRecord? = null
     private lateinit var recordButton: Button
     private lateinit var textView: TextView
-    private var recordingThread: Thread? = null
 
-    private val audioSource = MediaRecorder.AudioSource.MIC
-    private val sampleRateInHz = 16000
-    private val channelConfig = AudioFormat.CHANNEL_IN_MONO
-
-    // Note: We don't use AudioFormat.ENCODING_PCM_FLOAT
-    // since the AudioRecord.read(float[]) needs API level >= 23
-    // but we are targeting API level >= 21
-    private val audioFormat = AudioFormat.ENCODING_PCM_16BIT
-    private var idx: Int = 0
-    private var lastText: String = ""
     private var sherpaNcnnService: IAsrService? = null
     private var isServiceBound = false
 
@@ -98,9 +78,6 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    @Volatile
-    private var isRecording: Boolean = false
-
     override fun onRequestPermissionsResult(
         requestCode: Int,
         permissions: Array<String>,
@@ -135,9 +112,13 @@ class MainActivity : AppCompatActivity() {
 
 
         if (!isServiceBound) {
-            val intent = Intent(SERVICE_ACTION)
-            intent.setPackage(SERVICE_PACKAGE_NAME) // 明确指定 Service APK 的包名
-            val bindResult = bindService(intent, serviceConnection, BIND_AUTO_CREATE)
+            val intent = Intent()
+            val componentName = ComponentName(
+                "com.k2fsa.sherpa.ncnn",  // Service 所在包名
+                "com.k2fsa.sherpa.ncnn.AsrService" // Service 的完整类名
+            )
+            intent.setComponent(componentName)
+            val bindResult: Boolean = bindService(intent, serviceConnection, BIND_AUTO_CREATE)
             Log.i(TAG, "Attempting to bind service, result: $bindResult")
             if (!bindResult) {
                 textView.text = "Failed to bind to service. Is the service APK installed and permission granted?"
