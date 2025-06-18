@@ -77,6 +77,9 @@ public class AsrService extends Service {
     }
 
     public void initModel(RecognitionCallback callback) {
+        this.recognitionCallback = callback;
+        lastText = "";
+
         if (isInit) {
             Log.i(TAG, "Already init, skip");
             return;
@@ -119,8 +122,6 @@ public class AsrService extends Service {
                 getApplication().getAssets()
         );
         Log.i(TAG, "Finished initializing model");
-        this.recognitionCallback = callback;
-        lastText = "";
         isInit = true;
     }
 
