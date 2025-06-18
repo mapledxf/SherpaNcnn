@@ -9,7 +9,7 @@ import android.os.RemoteException;
 import android.util.Log;
 
 public class AsrService extends Service {
-    private static final String TAG = "SherpaNcnnService";
+    private static final String TAG = "AsrService";
     private SherpaNcnn model;
     private RecognitionCallback recognitionCallback;
     private boolean isInit = false;
@@ -22,6 +22,7 @@ public class AsrService extends Service {
             RecognitionCallback internalCallback = new RecognitionCallback() {
                 @Override
                 public void onResult(String result) {
+                    Log.d(TAG, "onResult: " + result);
                     try {
                         if (callback != null) callback.onResult(result);
                     } catch (RemoteException e) {
@@ -31,6 +32,7 @@ public class AsrService extends Service {
 
                 @Override
                 public void onPartialResult(String partialResult) {
+                    Log.d(TAG, "onPartialResult: " + partialResult);
                     try {
                         if (callback != null) callback.onPartialResult(partialResult);
                     } catch (RemoteException e) {
