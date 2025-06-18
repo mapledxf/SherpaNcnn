@@ -4,9 +4,7 @@ package com.k2fsa.sherpa.ncnn;
 
   // ISherpaNcnnService.aidl
   interface IAsrService {
-      void initModel();
-      boolean startRecording(IRecognitionCallback callback);
-      void stopRecording();
-      boolean isRecording();
+      void initModel(IRecognitionCallback callback);
+      void reset(boolean recreate);
+      void processSamples(in float[] samples);
   }
-
